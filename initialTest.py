@@ -1,67 +1,65 @@
-from PIL import Image
-import cv2
 import pytesseract
-import numpy as np
+import cv2
 
-
-# The image "testImage.png" is located in the same directory as the code being
-# ran. This names the image for further use with the PIL function Image, and
-# demonstrates the placement of the testfile within our coding framework.
-
-testImage = "./testImage.png"
-
-# This block opens the image for our initial analysis. The first line assigns
-# a shorthand for the testimage as it is being interpreted by PIL's Image
-# function. The second line prints interesting and potentially useful metadata.
-# The third opens the image in the default image viewer.
-
-#image = Image.open(testImage)
-#print (image)
-#im.show()
-
-# If we were preprocessing the image, this is where we would take care of
-# that. In our case there aren't noticeable artifacts so we can forget about
-# that for now. Likely pre-processing would include removing artifacts and
-# correcting page alignment.
-
-'''
-
-SPACE LEFT INTENTIONALLY BLANK --- ROOM FOR IMAGE PREPROCESSING
-
-'''
-
-# Now we begin our process of eliminating footnotes. First we check to see that
-# the OCR actually reads text from our image:
-
-#ocrNoPreProcess = pytesseract.image_to_string(image)
-#print (ocrNoPreProcess)
-
-# and we see that it does. Now we can set up our bounding boxes: first, we
-# blur the image to outline the forms of the textblocks on the page. Then we 
-# set a threshold of black and white to improve the contrast and make those 
-# blurred blocks look as distinct as possible.
+# Here we load our data and find some metadata that we will use in
+# post-processing in the penultimate block. We also set a base image that we'll
+# cut down to size having done out bounding-box magic.
 
 image = cv2.imread("./testImage.png")
-blur = cv2.GaussianBlur(image, (7,7), 0)
+im_h, im_w, im_d = image.shape
+base_image = image.copy()
+
+# Standard pre-processing of the image. We gray out the image so that we don't
+# lose much by way of colour artifacts or weird blending with the colour we're
+# setting our bounding boxes, and because image thresholding in opencv expects
+# a greyscale image. In our case, the image is going to be purely black and
+# white. It's not a photo, so there will be no shadows, and so a binary
+# thresholding technique is appropriate. Our blur gives us some leeway around
+# the actual text and will be useful in helping us identify the actual contour
+# lines later on. Otsu is a magic trick that chooses an optimal image threshold
+# on our behalf via some image processing wizardry that I don't pretend to
+# have read in detail. Something about finding a minimization in weighted
+# variance. Pretty cool.
+
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+blur = cv2.GaussianBlur(gray, (5,5), 0)
 thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
 
-# now we apply a kernel filtering to the result so that tesseract can easily
-# identify the regions.
 
-kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 3))
-dilate = cv2.dilate(thresh, kernel, iterations=1)
-cv2.imwrite("temp/sample_blur.png", blur)
-cv2.imwrite("temp/sample_dilated.png", dilate)
+# We're looking to manipulate the foreground objects, in this case all text.
+# It makes good sense then to use rectangles to do our dilation, in this case
+# rectangles that are wide and not so tall.
 
-# Now we find the contours:
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20,3))
+dilatedImage = cv2.dilate(thresh, kernel, iterations=1)
 
-contours = cv2.FindContours(dilate, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+# Now we find the contours of the particular shape we're trying to capture.
+# In this case it's the tiny line separating the footnotes from the main body
+# of the text. We use standard elements of the opencv library to do that. The
+# lambda is an "anonymous function" that lets us write in-line to sort our
+# bounding rectangles first where the number of contours is not 2. Honestly
+# I borrowed this part and tweaked it until it worked for my purposes so I need
+# to go back and RTFM before I can say I grok this part about actually
+# defining the contours. The for-loop I've got well understood tho.
+
+contours = cv2.findContours(dilatedImage, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 contours = contours[0] if len(contours) == 2 else contours[1]
 contours = sorted(contours, key=lambda x: cv2.boundingRect(x)[1])
-
 for c in contours:
     x,y,w,h = cv2.boundingRect(c)
-    if h > 100 and w > 150
-        cv2.rectangle(image, (x,y), (x+w, y+h), (36,255,12), 2)
+    if h < 15 and w > 10:
+        roi = base_image[0:y+h - 4, 0:im_w]
+        cv2.rectangle(image, (x,y), (x+w, y+h), (0,255,0), 2)
 
-cv2.imwrite("temp/boxTest.png", image)
+cv2.imwrite("temp/output.png", roi)
+
+#ocrSansFootnotes = pytesseract.image_to_string(roi)
+#print(ocrSansFootnotes)
+
+
+
+
+
+
+
+
