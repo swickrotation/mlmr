@@ -1,4 +1,4 @@
-# MLMR
+# mlmr
 ### "How is this not in the Public Domain?"
 
 A great deal of the writing of Marx have been aggregated by publishers, and while much of the writings themselves are within the public domain, the commentary or translations of those writings may not be. As a purely academic exercise, we seek to create a document that strictly contains the writings. 
