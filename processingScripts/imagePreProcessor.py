@@ -3,11 +3,23 @@ import numpy as np
 import os
 from  PIL import Image
 
-def imagePreProcessor(inputFolder):
-    for img in os.listdir(inputFolder):
-        img = Image.open(img)
-#        print(type(img))
-        imgNorm = np.zeros((img.shape[0], img.shape[1]))
-#        img = cv2.normalize(img, imgNorm, 0, 255, cv2.NORM_MINMAX)
+'''
+In order to make the OCR most effective, we need to pre-process the data. 
+There are a few standard operations to perform, including re-sizing,
+de-noising, thresholding , and grayscaling. We do all of this below.
+'''
 
-imagePreProcessor('../trainingData/pagesAsImages')
+def imagePreProcessor(inputDir):
+
+    #First we normalize the images:
+
+    for img in os.listdir(inputDir):
+        imgPath = os.path.join(inputDir, img)
+        img = Image.open(imgPath)
+        img = np.array(img)
+#        print(img.shape)
+        normImg = np.zeros((img.shape[0], img.shape[1]))
+        img = cv2.normalize(img, normImg, 0, 255, cv2.NORM_MINMAX)
+
+
+imagePreProcessor('../trainingData/testingDir')
