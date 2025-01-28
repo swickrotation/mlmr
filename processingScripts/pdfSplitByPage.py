@@ -11,9 +11,8 @@ import sys
 import re
 import os
 
-def pdfSplitByPage(inputFile, outputDir):
-    if not os.path.exists(outputDir):
-        os.makedirs(outputDir)
+def pdfSplitByPage(inputFile, outputPath):
+    os.makedirs(outputPath, exist_ok=True)
     inputpdf = PdfReader(open(inputFile, 'rb'))
     for i in range (len(inputpdf.pages)):
         output = PdfWriter()
@@ -21,13 +20,13 @@ def pdfSplitByPage(inputFile, outputDir):
         outputPreName = inputFile.split('/')[-1]
         outputPreName = re.sub('\.pdf$', '', outputPreName)
         if 0<= i < 9:
-            with open(outputDir + outputPreName + '_00%s.pdf' %(i+1), 'wb') as outputPage:
+            with open(outputPath + outputPreName + '_00%s.pdf' %(i+1), 'wb') as outputPage:
                 output.write(outputPage)
         elif 9 <= i < 99:
-            with open(outputDir + outputPreName + '_0%s.pdf' %(i+1), 'wb') as outputPage:
+            with open(outputPath + outputPreName + '_0%s.pdf' %(i+1), 'wb') as outputPage:
                 output.write(outputPage)
         else:
-            with open(outputDir + outputPreName + '_%s.pdf' %(i+1), 'wb') as outputPage:
+            with open(outputPath + outputPreName + '_%s.pdf' %(i+1), 'wb') as outputPage:
                 output.write(outputPage)
 pdfSplitByPage(sys.argv[1], sys.argv[2])
 # fisrt argument should be the file you wish to split, second argument the

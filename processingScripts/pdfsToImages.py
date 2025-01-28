@@ -6,14 +6,12 @@ from pdf2image import convert_from_path
 import sys
 import os
 
-def pdfToPNG(inputDir, outputDir):
-    if not os.path.exists(outputDir):
-        os.makedirs(outputDir)  
+def pdfToPNG(inputPath, outputPath):
+    os.makedirs(outputPath, exist_ok=True)
 
-    for page in os.listdir(inputDir):
-        pdfPath = os.path.join(inputDir, page)
-        outputImage = os.path.join(outputDir, f'{os.path.splitext(page)[0]}.png')
-        #print(outputImage)
+    for page in os.listdir(inputPath):
+        pdfPath = os.path.join(inputPath, page)
+        outputImage = os.path.join(outputPath, f'{os.path.splitext(page)[0]}.png')
 
         images = convert_from_path(pdfPath)
         for img in images:
